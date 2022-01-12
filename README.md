@@ -1,7 +1,10 @@
 ## ISS position tracker
 
-This is a frontend project that shows the current position of the International Space Station (ISS) relative to the Earth by clicking a button.
-The position is representedd by a red marker on a map. When clicking the marker, a popup indicating the temperature of the zone(°C) reported at the time of the request will appear on top of the marker.
+This is a frontend project that shows the current position of the International Space Station (ISS) relative to the Earth.
+Each time the user clicks a button, the position of the ISS on the map will be updated.
+By default, the map is centered to the middle of the terrestrial surface. 
+The ISS is representedd by a red marker and by clicking it, a popup indicating the reported temperature of the zone(°C) at the time of the request will appear on top of the marker.
+
 
 ### Technologies
 

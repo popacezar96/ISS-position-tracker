@@ -5,6 +5,7 @@ Each time the user clicks a button, the position of the ISS on the map will be u
 By default, the map is centered to the middle of the terrestrial surface. 
 The ISS is representedd by a red marker and by clicking it, a popup indicating the reported temperature of the zone(°C) at the time of the request will appear on top of the marker.
 
+The app can also display a weather forecast for today and the next 7 days. This is done by clicking an area on the map.
 
 ### Technologies
 

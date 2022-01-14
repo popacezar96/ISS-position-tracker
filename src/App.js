@@ -1,5 +1,6 @@
 import './App.css';
-import {useRef, useEffect} from 'react';
+import WeatherForArea from './WeatherForArea';
+import {useRef, useEffect, useState} from 'react';
 
 import mapboxgl from 'mapbox-gl';
 
@@ -8,19 +9,25 @@ import mapboxgl from 'mapbox-gl';
 mapboxgl.accessToken = 'pk.eyJ1IjoicG9wYWNlemFyIiwiYSI6ImNreTcwcHdnODB4aHYyd3FjbTd1YTVuOTIifQ.ugfd7chAjxQP-uDoXxzdtA';
 const weatherKey = '896846e494d895e2763ed9316f5c2ffb';
 
+
+//define iss marker and clicked area marker
+const issMarker = new mapboxgl.Marker({
+  color: '#F84C4C' // color it red
+  });
+
+
 function App() {
 
   //initial values to render the map
   const mapContainer = useRef(null);
   const map = useRef(null);
   
+  const [forecast, setForecast] = useState({
+    temperature: 0,
+    description: '',
+    daily: []
+  });
 
-  //define iss marker
-  const marker = new mapboxgl.Marker({
-    color: '#F84C4C' // color it red
-    });
-
-  
 
   //fetch ISS JSON data and weather
   const fetchIss = async () => {
@@ -34,28 +41,24 @@ function App() {
       map.current.flyTo({
         center: [lng,lat]
         });
+      
+      //move marker to Iss position
+      issMarker.setLngLat([lng,lat]);
+      issMarker.addTo(map.current);
 
-        //move marker to Iss position
-        marker.setLngLat([lng,lat]);    
-        marker.addTo(map.current);
 
-        //get weather for the position corresponding to the marker
-        const weatherRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${weatherKey}`);
-        const weatherData = await weatherRes.json();
+      //returns weather corresponding to the position of the ISS
+      const issTempData = await fetchWeatherData(lat,lng);
+      
+      const issTemp = issTempData.current.temp;
 
-        const temperature = (weatherData.main.temp - 273.15).toFixed(2);
+      const popup = new mapboxgl.Popup().setText(
+        `Temperature: ${issTemp} °C`
+      ).setMaxWidth('none');
+      
 
-        try {
-          // weather info displayed when clicking on marker
-          const popup = new mapboxgl.Popup().setText(
-            `Temperature: ${temperature} °C`
-            ).setMaxWidth('none');
-
-            marker.setPopup(popup)
-
-        } catch (err) {
-          console.log(err);
-        }
+      //show temperature when clicking on marker
+      issMarker.setPopup(popup);
 
     } catch (err) {
         console.log(err);
@@ -63,7 +66,25 @@ function App() {
   };
 
 
-  
+  //fetch weather for specific longitude and latitude on the map
+  const fetchWeatherData = async (lat,lng) => {
+
+        const weatherRes = await fetch(
+          `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lng}&units=metric&exclude=minutely,alerts&appid=${weatherKey}`
+          );
+
+        const weatherData = await weatherRes.json();
+
+        try {
+
+          return weatherData;
+
+        } catch (err) {
+          console.log(err);
+        }
+  }
+
+
   useEffect(() => {
 
     if (map.current) return; // initialize map only once
@@ -76,16 +97,35 @@ function App() {
       zoom: 6
     });
 
+
+    map.current.on('click',(e)=>{
+
+      fetchWeatherData(e.lngLat.lat, e.lngLat.lng)
+      .then((res)=>{  
+        setForecast({
+          temperature: res.current.temp,
+          description: res.current.weather[0].description,
+          daily: res.daily
+        });
+      })
+      .catch((err)=>{
+        console.log(err);
+      })
+    });
+
   });
 
 
 return(
   <div className='App'>
     <div ref={mapContainer} className="map-container"/>
-          
+    
     <button onClick={fetchIss}>
       Current Iss position
     </button>
+    {/* Component that shows updated weather predictions for a given area */}
+    <WeatherForArea weather = {forecast}/>
+
   </div>
   )
 }
